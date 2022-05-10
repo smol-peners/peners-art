@@ -40,7 +40,7 @@ describe("Peners Art", function () {
         tx = await peners.connect(owner).setupSaleInfo(1, saleSeason1)
         await tx.wait()
         
-        await expect(peners.connect(alice).mintPublic(2))
+        await expect(peners.connect(alice).mintPener(2, []))
         .to.be.revertedWith("Mint is not active");
 
         tx = await peners.connect(owner).flipMintState()
@@ -49,18 +49,18 @@ describe("Peners Art", function () {
     it("Public Minting", async function () {
         
         // Invalid Ether Amount
-        await expect(peners.connect(alice).mintPublic(2, { value: parseUnits(2 * 0.4, 18) }))
+        await expect(peners.connect(alice).mintPener(2, [], { value: parseUnits(2 * 0.4, 18) }))
         .to.be.revertedWith("Invalid amount");
 
-        tx = await peners.connect(alice).mintPublic(2, { value: parseUnits(2 * 0.02, 18) })
+        tx = await peners.connect(alice).mintPener(2, [], { value: parseUnits(2 * 0.02, 18) })
         await tx.wait()
 
         await expect(await peners.balanceOf(alice.address)).to.equal(2);
         
-        await expect(peners.connect(alice).mintPublic(2, { value: parseUnits(2 * 0.02, 18) }))
+        await expect(peners.connect(alice).mintPener(2, [], { value: parseUnits(2 * 0.02, 18) }))
         .to.be.revertedWith("You went over max tokens per transaction");
         
-        tx = await peners.connect(alice).mintPublic(1, { value: parseUnits(1 * 0.02, 18) })
+        tx = await peners.connect(alice).mintPener(1, [], { value: parseUnits(1 * 0.02, 18) })
         await tx.wait()
         
         await expect(await peners.balanceOf(alice.address)).to.equal(3);
@@ -89,28 +89,31 @@ describe("Peners Art", function () {
         tx = await peners.connect(owner).setSaleMerkleRoot(1, merkleRoot)
         await tx.wait()
 
+        tx = await peners.connect(owner).flipWhiteListMintState()
+        await tx.wait()
+
         const bobProof = tree.getHexProof(keccak256(bob.address))
         const fredProof = tree.getHexProof(keccak256(fred.address))
         const cindyProof = tree.getHexProof(keccak256(cindy.address))
 
-        await expect(peners.connect(bob).mintWhitelist(3, fredProof, { value: parseUnits(3 * 0.02, 18) }))
+        await expect(peners.connect(bob).mintPener(3, fredProof, { value: parseUnits(3 * 0.02, 18) }))
         .to.be.revertedWith("Invalid Proof")
 
-        await expect(peners.connect(fred).mintWhitelist(3, fredProof, { value: parseUnits(3 * 0.02, 18) }))
+        await expect(peners.connect(fred).mintPener(3, fredProof, { value: parseUnits(3 * 0.02, 18) }))
         .to.be.revertedWith("Invalid Proof")
 
-        await expect(peners.connect(fred).mintWhitelist(3, bobProof, { value: parseUnits(3 * 0.02, 18) }))
+        await expect(peners.connect(fred).mintPener(3, bobProof, { value: parseUnits(3 * 0.02, 18) }))
         .to.be.revertedWith("Invalid Proof")
 
-        tx = await peners.connect(bob).mintWhitelist(3, bobProof, { value: parseUnits(3 * 0.02, 18) })
+        tx = await peners.connect(bob).mintPener(3, bobProof, { value: parseUnits(3 * 0.02, 18) })
         await tx.wait()
 
-        tx = await peners.connect(cindy).mintWhitelist(3, cindyProof, { value: parseUnits(3 * 0.02, 18) })
+        tx = await peners.connect(cindy).mintPener(3, cindyProof, { value: parseUnits(3 * 0.02, 18) })
         await tx.wait()
         
         await expect(await peners.balanceOf(bob.address)).to.equal(3);
         
-        await expect(peners.connect(bob).mintPublic(1, { value: parseUnits(1 * 0.02, 18) }))
+        await expect(peners.connect(bob).mintPener(1, [], { value: parseUnits(1 * 0.02, 18) }))
         .to.be.revertedWith("You went over max tokens per transaction");
         
         await expect(await peners.totalSupply()).to.equal(9);
@@ -133,7 +136,7 @@ describe("Peners Art", function () {
     })
     it("Token uri", async function() {  
          
-        tx = await peners.connect(owner).setBaseURI("http://13.233.121.211:3001/metadata/");
+        tx = await peners.connect(owner).setBaseURI("https//smolpeners.metadata/");
         await tx.wait();
 
         // Reserved NFT

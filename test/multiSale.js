@@ -52,7 +52,7 @@ describe("Peners Art", function () {
 
     });
     it("Minting Season 1", async function () {
-        tx = await peners.connect(alice).mintPublic(3, { value: parseUnits(3 * 0.5, 18) })
+        tx = await peners.connect(alice).mintPener(3, [], { value: parseUnits(3 * 0.5, 18) })
         await tx.wait()
         
         whitelisted = [bob, cindy, domino]
@@ -65,13 +65,16 @@ describe("Peners Art", function () {
         tx = await peners.connect(owner).setSaleMerkleRoot(1, merkleRoot)
         await tx.wait()
 
+        tx = await peners.connect(owner).flipWhiteListMintState()
+        await tx.wait()
+
         const bobProof = tree.getHexProof(keccak256(bob.address))
         const cindyProof = tree.getHexProof(keccak256(cindy.address))
 
-        tx = await peners.connect(bob).mintWhitelist(3, bobProof, { value: parseUnits(3 * 0.5, 18) })
+        tx = await peners.connect(bob).mintPener(3, bobProof, { value: parseUnits(3 * 0.5, 18) })
         await tx.wait()
 
-        tx = await peners.connect(cindy).mintWhitelist(3, cindyProof, { value: parseUnits(3 * 0.5, 18) })
+        tx = await peners.connect(cindy).mintPener(3, cindyProof, { value: parseUnits(3 * 0.5, 18) })
         await tx.wait()
 
         tx = await peners.connect(owner).reserve(1)
@@ -82,7 +85,7 @@ describe("Peners Art", function () {
 
         await expect(await peners.totalSupply()).to.equal(10);
         
-        await expect(peners.connect(alice).mintPublic(3, { value: parseUnits(3 * 0.5, 18) }))
+        await expect(peners.connect(alice).mintPener(3, [], { value: parseUnits(3 * 0.5, 18) }))
         .to.be.revertedWith("Purchase would exceed max tokens");
 
     });
@@ -99,9 +102,12 @@ describe("Peners Art", function () {
         tx = await peners.connect(owner).setupSaleInfo(2, saleSeason2)
         await tx.wait()
 
+        tx = await peners.connect(owner).flipWhiteListMintState()
+        await tx.wait()
+
     });
     it("Minting Season 2", async function () {
-        tx = await peners.connect(alice).mintPublic(3, { value: parseUnits(3 * 0.5, 18) })
+        tx = await peners.connect(alice).mintPener(3, [], { value: parseUnits(3 * 0.5, 18) })
         await tx.wait()
         
         whitelisted = [bob, cindy, domino]
@@ -114,13 +120,16 @@ describe("Peners Art", function () {
         tx = await peners.connect(owner).setSaleMerkleRoot(2, merkleRoot)
         await tx.wait()
 
+        tx = await peners.connect(owner).flipWhiteListMintState()
+        await tx.wait()
+
         const bobProof = tree.getHexProof(keccak256(bob.address))
         const cindyProof = tree.getHexProof(keccak256(cindy.address))
 
-        tx = await peners.connect(bob).mintWhitelist(3, bobProof, { value: parseUnits(3 * 0.5, 18) })
+        tx = await peners.connect(bob).mintPener(3, bobProof, { value: parseUnits(3 * 0.5, 18) })
         await tx.wait()
 
-        tx = await peners.connect(cindy).mintWhitelist(3, cindyProof, { value: parseUnits(3 * 0.5, 18) })
+        tx = await peners.connect(cindy).mintPener(3, cindyProof, { value: parseUnits(3 * 0.5, 18) })
         await tx.wait()
 
         tx = await peners.connect(owner).reserve(1)
@@ -131,7 +140,7 @@ describe("Peners Art", function () {
 
         await expect(await peners.totalSupply()).to.equal(20);
         
-        await expect(peners.connect(alice).mintPublic(3, { value: parseUnits(3 * 0.5, 18) }))
+        await expect(peners.connect(alice).mintPener(3, [], { value: parseUnits(3 * 0.5, 18) }))
         .to.be.revertedWith("Purchase would exceed max tokens");
 
     });

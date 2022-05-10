@@ -597,8 +597,8 @@ pragma solidity ^0.8.0;
 contract RoyaltyDistribution is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    uint constant artistRoyalty = 5000;
-    uint constant charityRoyalty = 5000;
+    uint256 public artistRoyalty = 5000;
+    uint256 public charityRoyalty = 5000;
 
     address payable public artist = payable(0xA5D82471A12FBd6fD1412e5eb5850d9d6aC5d525);
     address payable public charity = payable(0xA5D82471A12FBd6fD1412e5eb5850d9d6aC5d525);
@@ -621,7 +621,7 @@ contract RoyaltyDistribution is Ownable, ReentrancyGuard {
         claimableToken.safeTransfer(charity, total*charityRoyalty/10000);
     }
 
-    function changeRoyaltyShares(uint _artistRoyalty, uint _charityRoyalty) {
+    function changeRoyaltyShares(uint _artistRoyalty, uint _charityRoyalty) external onlyOwner {
         artistRoyalty = _artistRoyalty;
         charityRoyalty = _charityRoyalty;
     }

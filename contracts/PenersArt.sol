@@ -25,6 +25,7 @@ contract PenerArt is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
     uint256 public currentSaleIndex;        // Tracks current Sale
     address public charityWallet = 0xA5D82471A12FBd6fD1412e5eb5850d9d6aC5d525;
     bool public mintIsActive;
+    bool public whiteListMintIsActive;
     address public operator;
 
     mapping (uint256 => SaleClass) public saleInfo;
@@ -59,6 +60,11 @@ contract PenerArt is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
         mintIsActive = !mintIsActive;
     }
 
+    function flipWhiteListMintState() external {
+        require(msg.sender == owner() || msg.sender == operator, "Not Authenticated");
+        whiteListMintIsActive = !whiteListMintIsActive;
+    }
+
      /**
      * @notice sets Merkle Root for whitelisted addresses
      */
@@ -76,15 +82,20 @@ contract PenerArt is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     /**
-     *  @notice public mint function
+     *  @notice Pener mint
      */
-    function mintPublic(uint numberOfTokens) public payable nonReentrant {
+    function mintPener(uint256 numberOfTokens, bytes32[] calldata _merkleProof) public payable nonReentrant{
         SaleClass memory currentSale = saleInfo[currentSaleIndex];
 
         require(mintIsActive, "Mint is not active");
         require(totalSupply() + numberOfTokens <= currentSale.saleEndSupply, "Purchase would exceed max tokens");
         require(msg.value == currentSale.pricePerToken * numberOfTokens, "Invalid amount");
         require(tokensClaimedPerSale[msg.sender][currentSaleIndex] + numberOfTokens <= currentSale.maxTokenPerWallet, "You went over max tokens per transaction");
+
+        if (whiteListMintIsActive) {
+            bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+            require(MerkleProof.verify(_merkleProof, saleWhiteListMerkleRoot[currentSaleIndex], leaf), "Invalid Proof");   
+        }
 
         for (uint256 index = 0; index < numberOfTokens; index++) {
             tokenIds++;
@@ -93,29 +104,7 @@ contract PenerArt is ERC721, ERC721Enumerable, Ownable, ReentrancyGuard {
 
         tokensClaimedPerSale[msg.sender][currentSaleIndex] += numberOfTokens;
     }
-
-    /**
-     * @notice Presale wallet list mint 
-     */
-    function mintWhitelist(uint256 numberOfTokens, bytes32[] calldata _merkleProof) public payable nonReentrant{
-        SaleClass memory currentSale = saleInfo[currentSaleIndex];
-
-        require(mintIsActive, "Mint is not active");
-        require(totalSupply() + numberOfTokens <= currentSale.saleEndSupply, "Purchase would exceed max tokens");
-        require(msg.value == currentSale.pricePerToken * numberOfTokens, "Invalid amount");
-        require(tokensClaimedPerSale[msg.sender][currentSaleIndex] + numberOfTokens <= currentSale.maxTokenPerWallet, "You went over max tokens per transaction");
-
-
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        require(MerkleProof.verify(_merkleProof, saleWhiteListMerkleRoot[currentSaleIndex], leaf), "Invalid Proof");
-
-        for (uint256 index = 0; index < numberOfTokens; index++) {
-            tokenIds++;
-            _safeMint(msg.sender, tokenIds);
-        }
-
-        tokensClaimedPerSale[msg.sender][currentSaleIndex] += numberOfTokens;
-    }
+    
 
     /**
      * @notice Reserve token by admin
